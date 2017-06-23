@@ -26,3 +26,6 @@ Just copy `.bash_profile` to your home directory. There are no dependencies to i
 
   ![ssh](images/ssh.png)
 
+- and they all work in combination with each other
+
+  ![combo](images/combo.png)
