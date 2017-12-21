@@ -38,7 +38,7 @@ function __add_git_to_prompt {
     else
       __git_prompt="\[\e[36m\]${__git_prompt_branch}\[\e[0m\]"
     fi
-    PS1_INNER+=" ${__git_prompt}"
+    PS1_INNER="${PS1_INNER} ${__git_prompt}"
   fi
 }
 
