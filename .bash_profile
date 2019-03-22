@@ -88,7 +88,7 @@ if [ -n "$PS1" ]; then
 
   # make the prompt suffix red if the previous command failed
   __add_exit_code_to_prompt() {
-    [ "$PS1_LAST_EXIT" -ne 0 ] && PS1_SUFFIX="\[\e[31m\]${PS1_SUFFIX}\[\e[0m\]"
+    [ "$PS1_LAST_EXIT" != '0' ] && PS1_SUFFIX="\[\e[31m\]${PS1_SUFFIX}\[\e[0m\]"
   }
 
   # prepend user@hostname to prompt, if connected via ssh
