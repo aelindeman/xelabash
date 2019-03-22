@@ -1,9 +1,13 @@
 # load extra profile files
-for f in "$HOME/.profile" "$HOME/.bash_aliases"; fo
+for f in "$HOME/.profile" "$HOME/.bash_aliases"; do
   if [ -f "$f" ]; then
-    source "$HOME/.profile"
+    source "$f"
   fi
 done
+
+# check if required tools are available
+__git_bin="$(command -v git)"
+__kubectl_bin="$(command -v kubectl)"
 
 # only set the rest up if this is an interactive shell
 if [ -n "$PS1" ]; then
@@ -34,7 +38,7 @@ if [ -n "$PS1" ]; then
   shopt -s checkwinsize
 
   # set up the prompt
-  function __set_default_prompt {
+  __set_default_prompt() {
     PS1_LAST_EXIT="$?"
     PS1_PREFIX='\[\e]0;\w\a\]'
     PS1_INNER='\[\e[1m\]\w\[\e[0m\]'
@@ -42,8 +46,7 @@ if [ -n "$PS1" ]; then
   }
 
   # display git branch and repo state asterisk after path, if inside of a repository
-  function __add_git_to_prompt {
-    [ -x "$(command -v git)" ] || return 0
+  __add_git_to_prompt() {
     local __git_prompt
     local __git_prompt_branch
     local __git_prompt_status_count
@@ -58,7 +61,7 @@ if [ -n "$PS1" ]; then
       __git_prompt_branch='(bare repo)'
     fi
 
-    if [ ! -z "$__git_prompt_branch" ]; then
+    if [ -n "$__git_prompt_branch" ]; then
       if [ "${__git_prompt_status_count:-0}" -gt 0 ]; then
         __git_prompt="\[\e[1;33m\]${__git_prompt_branch}*\[\e[0m\]"
       else
@@ -68,26 +71,41 @@ if [ -n "$PS1" ]; then
     fi
   }
 
+  # append kubernetes context name and namespace
+  __add_kube_to_prompt() {
+  	local __kube_prompt_context
+  	local __kube_prompt_namespace
+    __kube_context="$(kubectl config view -o=jsonpath='{.current-context}')"
+    __kube_namespace="$(kubectl config view -o=jsonpath="{.contexts[?(@.name==\"${__kubernetes_prompt_context}\")].context.namespace}")"
+    if [ -n "$__kube_prompt_namespace" ]; then
+      __kube_prompt="${__kube_context}:${__kube_prompt_namespace}"
+    else
+      __kube_prompt="${__kube_context}"
+    fi
+  	PS1_INNER="${PS1_INNER} \[\e[34m\]${__kube_prompt}\[\e[0m\]"
+  }
+
   # make the prompt suffix red if the previous command failed
-  function __add_exit_code_to_prompt {
+  __add_exit_code_to_prompt() {
     [ "$PS1_LAST_EXIT" -ne 0 ] && PS1_SUFFIX="\[\e[31m\]${PS1_SUFFIX}\[\e[0m\]"
   }
 
   # prepend user@hostname to prompt, if connected via ssh
-  function __add_ssh_to_prompt {
-    if [ ! -z "$SSH_CONNECTION" ]; then
+  __add_ssh_to_prompt() {
+    if [ -n "$SSH_CONNECTION" ]; then
       PS1_PREFIX='\[\e]0;\u@\h \w\a\]'
       PS1_INNER="\[\e[2m\]\u@\h\[\e[0m\] ${PS1_INNER}"
     fi
   }
 
   # set the prompt
-  function __set_prompt {
+  __set_prompt() {
     history -a
     __set_default_prompt
     __add_exit_code_to_prompt
     __add_ssh_to_prompt
-    __add_git_to_prompt
+    [ -n "$__git_bin" ] && __add_git_to_prompt
+    [ -n "$__kubectl_bin" ] && __add_kube_to_prompt
     export PS1="${PS1_PREFIX}${PS1_INNER}${PS1_SUFFIX}"
   }
 
