@@ -8,17 +8,16 @@ done
 # only set the rest up if this is an interactive shell
 if [ -n "$PS1" ]; then
 
-  # check if required tools are available
-  __git_bin="$(command -v git)"
-  __kubectl_bin="$(command -v kubectl)"
-
   # set up the prompt
   __set_default_prompt() {
-    PS1_LAST_EXIT="$?"
     PS1_PREFIX='\[\e]0;\w\a\]'
     PS1_INNER='\[\e[1m\]\w\[\e[0m\]'
     PS1_SUFFIX=' \$ '
   }
+
+  # check if required tools are available
+  __git_bin="$(command -v git)"
+  __kubectl_bin="$(command -v kubectl)"
 
   # configure bash history
   export HISTSIZE=
@@ -101,6 +100,7 @@ if [ -n "$PS1" ]; then
 
   # set the prompt
   __set_prompt() {
+    PS1_LAST_EXIT="$?"
     __set_default_prompt
     __add_exit_code_to_prompt
     __add_ssh_to_prompt
