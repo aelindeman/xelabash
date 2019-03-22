@@ -20,7 +20,7 @@ if [ -n "$PS1" ]; then
   shopt -s histappend
 
   # load bash-completion from Homebrew, if it's installed
-  if [ -x "$(command -v brew)" ] && [ -f "$(brew --prefix)/etc/bash_completion" ]; then 
+  if [ -x "$(command -v brew)" ] && [ -f "$(brew --prefix)/etc/bash_completion" ]; then
     source "$(brew --prefix)/etc/bash_completion"
   fi
 
@@ -33,7 +33,7 @@ if [ -n "$PS1" ]; then
   bind 'set show-all-if-ambiguous on'
   bind 'set show-all-if-unmodified on'
   bind 'set skip-completed-text on'
-  
+
   # make some programs behave better on window resize
   shopt -s checkwinsize
 
@@ -73,16 +73,17 @@ if [ -n "$PS1" ]; then
 
   # append kubernetes context name and namespace
   __add_kube_to_prompt() {
-  	local __kube_prompt_context
-  	local __kube_prompt_namespace
+    local __kube_context
+    local __kube_namespace
+
     __kube_context="$(kubectl config view -o=jsonpath='{.current-context}')"
-    __kube_namespace="$(kubectl config view -o=jsonpath="{.contexts[?(@.name==\"${__kubernetes_prompt_context}\")].context.namespace}")"
-    if [ -n "$__kube_prompt_namespace" ]; then
-      __kube_prompt="${__kube_context}:${__kube_prompt_namespace}"
+    __kube_namespace="$(kubectl config view -o=jsonpath="{.contexts[?(@.name==\"${__kube_context}\")].context.namespace}")"
+    if [ -n "$__kube_namespace" ]; then
+      __kube_prompt="${__kube_context}:${__kube_namespace}"
     else
       __kube_prompt="${__kube_context}"
     fi
-  	PS1_INNER="${PS1_INNER} \[\e[34m\]${__kube_prompt}\[\e[0m\]"
+    PS1_INNER="${PS1_INNER} \[\e[34m\]${__kube_prompt}\[\e[0m\]"
   }
 
   # make the prompt suffix red if the previous command failed
