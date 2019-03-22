@@ -8,8 +8,8 @@ done
 # only set the rest up if this is an interactive shell
 if [ -n "$PS1" ]; then
 
-  # Apple Terminal has some session handling tweaks, so don't lose them if we can use them
-  if [ "$TERM_PROGRAM" = 'Apple_Terminal' ] && [ "$(type -t update_terminal_cwd)" = 'function' ]; then
+  # Apple Terminal has some path and session handling tweaks, so don't lose them if we can use them
+  if [ "$TERM_PROGRAM" = 'Apple_Terminal' ]; then
     __xelabash_is_apple_terminal=true
   fi
 
@@ -17,7 +17,7 @@ if [ -n "$PS1" ]; then
   __xelabash_set_default_prompt() {
     PS1_LAST_EXIT="$?"
     PS1_PREFIX=''
-    if [ -z "${__xelabash_is_apple_terminal:-}" ]; then
+    if [ -z "$__xelabash_is_apple_terminal" ]; then
       PS1_PREFIX='\[\e]0;\w\a\]'
     fi
     PS1_INNER='\[\e[1m\]\w\[\e[0m\]'
@@ -29,8 +29,8 @@ if [ -n "$PS1" ]; then
   __xelabash_kubectl_bin="$(command -v kubectl)"
 
   # configure bash history
-  export HISTCONTROL=ignoreboth:erasedups
-  if [ -z "${__xelabash_is_apple_terminal:-}" ]; then
+  if [ -z "$__xelabash_is_apple_terminal" ]; then
+    export HISTCONTROL=ignoreboth:erasedups
     export HISTTIMEFORMAT='[%Y-%m-%d %T] '
     shopt -s histappend
   fi
@@ -118,9 +118,9 @@ if [ -n "$PS1" ]; then
     history -a
   }
 
-  if [ -n "${__xelabash_is_apple_terminal:-}" ]; then
-    PROMPT_COMMAND="__xelabash${PROMPT_COMMAND:+; $PROMPT_COMMAND}"
-  else
+  if [ -z "$__xelabash_is_apple_terminal" ]; then
     PROMPT_COMMAND='__xelabash'
+  else
+    PROMPT_COMMAND="__xelabash${PROMPT_COMMAND:+; $PROMPT_COMMAND}"
   fi
 fi
