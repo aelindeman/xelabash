@@ -8,23 +8,32 @@ done
 # only set the rest up if this is an interactive shell
 if [ -n "$PS1" ]; then
 
+  # Apple Terminal has some session handling tweaks, so don't lose them if we can use them
+  if [ "$TERM_PROGRAM" = 'Apple_Terminal' ] && [ "$(type -t update_terminal_cwd)" = 'function' ]; then
+    __xelabash_is_apple_terminal=true
+  fi
+
   # set up the prompt
-  __set_default_prompt() {
-    PS1_PREFIX='\[\e]0;\w\a\]'
+  __xelabash_set_default_prompt() {
+    PS1_LAST_EXIT="$?"
+    PS1_PREFIX=''
+    if [ -z "${__xelabash_is_apple_terminal:-}" ]; then
+      PS1_PREFIX='\[\e]0;\w\a\]'
+    fi
     PS1_INNER='\[\e[1m\]\w\[\e[0m\]'
     PS1_SUFFIX=' \$ '
   }
 
   # check if required tools are available
-  __git_bin="$(command -v git)"
-  __kubectl_bin="$(command -v kubectl)"
+  __xelabash_git_bin="$(command -v git)"
+  __xelabash_kubectl_bin="$(command -v kubectl)"
 
   # configure bash history
-  export HISTSIZE=
-  export HISTFILESIZE=
-  export HISTTIMEFORMAT='[%Y-%m-%d %T] '
   export HISTCONTROL=ignoreboth:erasedups
-  shopt -s histappend
+  if [ -z "${__xelabash_is_apple_terminal:-}" ]; then
+    export HISTTIMEFORMAT='[%Y-%m-%d %T] '
+    shopt -s histappend
+  fi
 
   # load bash-completion from Homebrew, if it's installed
   if [ -x "$(command -v brew)" ] && [ -f "$(brew --prefix)/etc/bash_completion" ]; then
@@ -45,7 +54,7 @@ if [ -n "$PS1" ]; then
   shopt -s checkwinsize
 
   # display git branch and repo state asterisk after path, if inside of a repository
-  __add_git_to_prompt() {
+  __xelabash_add_git_to_prompt() {
     local __git_prompt
     local __git_prompt_branch
     local __git_prompt_status_count
@@ -66,12 +75,12 @@ if [ -n "$PS1" ]; then
       else
         __git_prompt="\[\e[36m\]${__git_prompt_branch}\[\e[0m\]"
       fi
-      PS1_INNER="${PS1_INNER} ${__git_prompt}"
+      PS1_INNER="${PS1_INNER:-} ${__git_prompt}"
     fi
   }
 
   # append kubernetes context name and namespace
-  __add_kube_to_prompt() {
+  __xelabash_add_kube_to_prompt() {
     local __kube_context
     local __kube_namespace
 
@@ -82,16 +91,16 @@ if [ -n "$PS1" ]; then
     else
       __kube_prompt="${__kube_context}"
     fi
-    PS1_INNER="${PS1_INNER} \[\e[34m\]${__kube_prompt}\[\e[0m\]"
+    PS1_INNER="${PS1_INNER:-} \[\e[34m\]${__kube_prompt}\[\e[0m\]"
   }
 
   # make the prompt suffix red if the previous command failed
-  __add_exit_code_to_prompt() {
+  __xelabash_add_exit_code_to_prompt() {
     [ "$PS1_LAST_EXIT" -ne 0 ] && PS1_SUFFIX="\[\e[31m\]${PS1_SUFFIX}\[\e[0m\]"
   }
 
   # prepend user@hostname to prompt, if connected via ssh
-  __add_ssh_to_prompt() {
+  __xelabash_add_ssh_to_prompt() {
     if [ -n "$SSH_CONNECTION" ]; then
       PS1_PREFIX='\[\e]0;\u@\h \w\a\]'
       PS1_INNER="\[\e[2m\]\u@\h\[\e[0m\] ${PS1_INNER}"
@@ -99,16 +108,19 @@ if [ -n "$PS1" ]; then
   }
 
   # set the prompt
-  __set_prompt() {
-    PS1_LAST_EXIT="$?"
-    __set_default_prompt
-    __add_exit_code_to_prompt
-    __add_ssh_to_prompt
-    [ -n "$__git_bin" ] && __add_git_to_prompt
-    [ -n "$__kubectl_bin" ] && __add_kube_to_prompt
-    export PS1="${PS1_PREFIX}${PS1_INNER}${PS1_SUFFIX}"
+  __xelabash() {
+    __xelabash_set_default_prompt
+    __xelabash_add_exit_code_to_prompt
+    __xelabash_add_ssh_to_prompt
+    [ -n "$GIT_PROMPT" ] && [ "$__xelabash_git_bin" ] && __xelabash_add_git_to_prompt
+    [ -n "$KUBE_PROMPT" ] && [ -n "$__xelabash_kubectl_bin" ] && __xelabash_add_kube_to_prompt  # disabled by default
+    export PS1="${PS1_PREFIX:-}${PS1_INNER:-}${PS1_SUFFIX:-}"
     history -a
   }
 
-  PROMPT_COMMAND='__set_prompt'
+  if [ -n "${__xelabash_is_apple_terminal:-}" ]; then
+    PROMPT_COMMAND="__xelabash${PROMPT_COMMAND:+; $PROMPT_COMMAND}"
+  else
+    PROMPT_COMMAND='__xelabash'
+  fi
 fi
