@@ -5,17 +5,25 @@ for f in "$HOME/.profile" "$HOME/.bash_aliases"; do
   fi
 done
 
-# check if required tools are available
-__git_bin="$(command -v git)"
-__kubectl_bin="$(command -v kubectl)"
-
 # only set the rest up if this is an interactive shell
 if [ -n "$PS1" ]; then
+
+  # check if required tools are available
+  __git_bin="$(command -v git)"
+  __kubectl_bin="$(command -v kubectl)"
+
+  # set up the prompt
+  __set_default_prompt() {
+    PS1_LAST_EXIT="$?"
+    PS1_PREFIX='\[\e]0;\w\a\]'
+    PS1_INNER='\[\e[1m\]\w\[\e[0m\]'
+    PS1_SUFFIX=' \$ '
+  }
 
   # configure bash history
   export HISTSIZE=
   export HISTFILESIZE=
-  export HISTTIMEFORMAT='[%y-%m-%d %T] '
+  export HISTTIMEFORMAT='[%Y-%m-%d %T] '
   export HISTCONTROL=ignoreboth:erasedups
   shopt -s histappend
 
@@ -36,14 +44,6 @@ if [ -n "$PS1" ]; then
 
   # make some programs behave better on window resize
   shopt -s checkwinsize
-
-  # set up the prompt
-  __set_default_prompt() {
-    PS1_LAST_EXIT="$?"
-    PS1_PREFIX='\[\e]0;\w\a\]'
-    PS1_INNER='\[\e[1m\]\w\[\e[0m\]'
-    PS1_SUFFIX=' \$ '
-  }
 
   # display git branch and repo state asterisk after path, if inside of a repository
   __add_git_to_prompt() {
@@ -88,7 +88,7 @@ if [ -n "$PS1" ]; then
 
   # make the prompt suffix red if the previous command failed
   __add_exit_code_to_prompt() {
-    [ "$PS1_LAST_EXIT" != '0' ] && PS1_SUFFIX="\[\e[31m\]${PS1_SUFFIX}\[\e[0m\]"
+    [ "$PS1_LAST_EXIT" -ne 0 ] && PS1_SUFFIX="\[\e[31m\]${PS1_SUFFIX}\[\e[0m\]"
   }
 
   # prepend user@hostname to prompt, if connected via ssh
@@ -101,13 +101,13 @@ if [ -n "$PS1" ]; then
 
   # set the prompt
   __set_prompt() {
-    history -a
     __set_default_prompt
     __add_exit_code_to_prompt
     __add_ssh_to_prompt
     [ -n "$__git_bin" ] && __add_git_to_prompt
     [ -n "$__kubectl_bin" ] && __add_kube_to_prompt
     export PS1="${PS1_PREFIX}${PS1_INNER}${PS1_SUFFIX}"
+    history -a
   }
 
   PROMPT_COMMAND='__set_prompt'
