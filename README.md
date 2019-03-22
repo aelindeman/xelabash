@@ -18,6 +18,10 @@ Just copy `.bash_profile` to your home directory. There are no dependencies to i
 
   ![git](images/git.png)
 
+- kubernetes context (and namespace, if set)
+
+  ![kube](images/kube.png)
+
 - last process exit status
 
   ![exit](images/exit.png)
