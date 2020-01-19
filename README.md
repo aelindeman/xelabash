@@ -4,11 +4,21 @@
 
 A few simple, no-nonsense, non-distracting additions to the standard bash prompt.
 
-## Install
+## Features
+
+- Compact, minimalist, single-line prompt, featuring:
+  - Red `$` (or `#`, if root) in prompt following an error
+  - `user@hostname`, but only when in a remote session
+  - Git branch and working copy dirty status, when in a Git repo
+  - Active Kubernetes context and namespace
+- "Better"-than-default autocomplete settings
+- Not overly opinionated; designed to integrate with other settings and tools if desired 
+
+## Install and Setup
 
 Works best with bash 4.4+.
 
-Clone this repo and symlink `.bash_profile` to your home folder.
+Clone this repo and symlink `.bash_profile` to your home folder. There are no dependencies to install.
 
 ```bash
 cd
@@ -18,30 +28,30 @@ ln -s .local/share/xelabash/.bash_profile
 
 Xelabash will also source `.profile` and `.bash_aliases`, if you have them.
 
-There are no dependencies to install. Enjoy.
+Git and Kubernetes prompt pieces are **opt-in.** Set `GIT_PROMPT=true` and/or `KUBE_PROMPT=true` in your `~/.profile` to activate them, or use a tool like [direnv](https://github.com/direnv/direnv) to do it conditionally based on your working directory.
 
 ## More pictures
 
-- full pwd
+- Full `cwd`
 
   ![dir](images/dir.png)
 
-- git status and branch
+- Git status and branch
 
   ![git](images/git.png)
 
-- kubernetes context (and namespace, if set)
+- Kubernetes context (and namespace, if set)
 
   ![kube](images/kube.png)
 
-- last process exit status
+- Last process exit status
 
   ![exit](images/exit.png)
 
-- username and hostname, when connected over ssh
+- Username and hostname, when connected via `ssh`
 
   ![ssh](images/ssh.png)
 
-- and they all work in combination with each other
+- ...and they all work in combination with each other
 
   ![combo](images/combo.png)
