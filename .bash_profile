@@ -1,3 +1,5 @@
+# shellcheck shell=bash source="$HOME"
+
 # load extra profile files
 for f in "$HOME/.profile" "$HOME/.bash_aliases"; do
   if [ -f "$f" ]; then
@@ -42,7 +44,9 @@ if [ -n "$PS1" ]; then
 
   # make bash-completion suck less
   bind 'set colored-stats on'
+  bind 'set colored-completion-prefix on'
   bind 'set completion-ignore-case on'
+  bind 'set completion-map-case on'
   bind 'set expand-tilde on'
   bind 'set mark-directories on'
   bind 'set mark-symlinked-directories on'
