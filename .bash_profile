@@ -30,6 +30,15 @@ if [ -n "$PS1" ]; then
   __xelabash_git_bin="$(command -v git)"
   __xelabash_kubectl_bin="$(command -v kubectl)"
 
+  # load custom dircolors
+  if [ -x "$(command -v dircolors)" ]; then
+    if [ -r "$HOME/.dircolors" ]; then
+      eval "$(dircolors -b "$HOME/.dircolors")"
+    else
+      eval "$(dircolors -b)"
+     fi
+  fi
+
   # configure bash history
   if [ -z "$__xelabash_is_apple_terminal" ]; then
     export HISTCONTROL=ignoreboth:erasedups
