@@ -1,10 +1,7 @@
 # shellcheck shell=bash source="$HOME"
 
 __xelabash_path() {
-  self="${BASH_SOURCE[0]}"
-  # readlink -f "$self"
-  # python -c "import os, sys; print(os.path.realpath(sys.argv[1]))" "$self"
-  echo "$(cd "$(dirname "$self")" && pwd -P)/$(basename "$self")"
+  echo "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)/$(basename "${BASH_SOURCE[0]}")"
 }
 
 __xelabash_os() {
@@ -49,14 +46,24 @@ __xelabash_configure_history() {
   fi
 }
 
-# load all configuration files
-__xelabash_configure() {
+__xelabash_configure_variables() {
+  export __xelabash_git_bin
+  export __xelabash_kubectl_bin
   __xelabash_git_bin="$(command -v git)"
   __xelabash_kubectl_bin="$(command -v kubectl)"
+}
+
+# load all configuration files
+__xelabash_configure() {
+  export __xelabash_PS1_last_exit
+  export __xelabash_PS1_prefix
+  export __xelabash_PS1_content
+  export __xelabash_PS1_suffix
 
   __xelabash_configure_completion
   __xelabash_configure_dircolors
   __xelabash_configure_history
+  __xelabash_configure_variables
 
   for config in "$(dirname "$(__xelabash_path)")"/config.d/*.bash; do
     source "$config"
@@ -71,63 +78,60 @@ __xelabash_configure() {
 
 # prepares the prompt variables
 __xelabash_reset_prompt() {
-  PS1_LAST_EXIT="$?"
-  PS1_PREFIX=''
+  export __xelabash_PS1_last_exit="$?"
+  export __xelabash_PS1_prefix=''
   if ! __xelabash_is_apple_terminal; then
-    PS1_PREFIX='\[\e]0;\w\a\]'
+    __xelabash_PS1_prefix='\[\e]0;\w\a\]'
   fi
-  PS1_INNER='\[\e[1m\]\w\[\e[0m\]'
-  PS1_SUFFIX=' \$ '
+  export __xelabash_PS1_content='\[\e[1m\]\w\[\e[0m\]'
+  export __xelabash_PS1_suffix=' \$ '
 }
 
-# make PS1_SUFFIX red if the previous command failed
+# make __xelabash_PS1_suffix red if the previous command failed
 __xelabash_add_exit_code_to_prompt() {
-  [ "$PS1_LAST_EXIT" -ne 0 ] && PS1_SUFFIX="\[\e[31m\]${PS1_SUFFIX}\[\e[0m\]"
+  [ "$__xelabash_PS1_last_exit" -ne 0 ] && __xelabash_PS1_suffix="\[\e[31m\]${__xelabash_PS1_suffix}\[\e[0m\]"
 }
 
 # display git branch and repo state asterisk after path, if inside of a repository
 __xelabash_add_git_to_prompt() {
-  local __git_prompt
-  local __git_prompt_branch
-  local __git_prompt_status_count
+  local prompt
+  local branch
+  local status_count
 
   if [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = 'true' ] || [ "$(git rev-parse --is-inside-git-dir 2>/dev/null)" = 'true' ]; then
-    __git_prompt_branch="$(git rev-parse --abbrev-ref HEAD)"
-    [ -z "$__git_prompt_branch" ] && __git_prompt_branch='(no branch)'
+    branch="$(git rev-parse --abbrev-ref HEAD)"
+    [ -z "$branch" ] && branch='(no branch)'
     if [ "$(git rev-parse --is-inside-git-dir 2>/dev/null)" != 'true' ]; then
-      __git_prompt_status_count="$(git status --porcelain | wc -l)"
+      status_count="$(git status --porcelain | wc -l)"
     fi
   elif [ "$(git rev-parse --is-bare-repository 2>/dev/null)" = 'true' ]; then
-    __git_prompt_branch='(bare repo)'
+    branch='(bare repo)'
   fi
 
-  if [ -n "$__git_prompt_branch" ]; then
-    if [ "${__git_prompt_status_count:-0}" -gt 0 ]; then
-      __git_prompt="\[\e[1;33m\]${__git_prompt_branch}*\[\e[0m\]"
+  if [ -n "$branch" ]; then
+    if [ "${status_count:-0}" -gt 0 ]; then
+      prompt="\[\e[1;33m\]${branch}*\[\e[0m\]"
     else
-      __git_prompt="\[\e[36m\]${__git_prompt_branch}\[\e[0m\]"
+      prompt="\[\e[36m\]${branch}\[\e[0m\]"
     fi
-    PS1_INNER="${PS1_INNER:-} ${__git_prompt}"
+    __xelabash_PS1_content="${__xelabash_PS1_content:-} ${prompt}"
   fi
 }
 
 # display kubernetes context name and namespace
 __xelabash_add_kube_to_prompt() {
-  local __kube_context
-  local __kube_namespace
-
-  __kube_context="$(kubectl config view -o=jsonpath='{.current-context}')"
-  __kube_namespace="$(kubectl config view -o=jsonpath="{.contexts[?(@.name==\"${__kube_context}\")].context.namespace}")"
-
-  __kube_prompt="${__kube_context}${__kube_namespace:+:$__kube_namespace}"
-  PS1_INNER="${PS1_INNER:-} \[\e[34m\]${__kube_prompt}\[\e[0m\]"
+  local context
+  local namespace
+  context="$(kubectl config view -o=jsonpath='{.current-context}')"
+  namespace="$(kubectl config view -o=jsonpath="{.contexts[?(@.name==\"${context}\")].context.namespace}")"
+  __xelabash_PS1_content="${__xelabash_PS1_content:-} \[\e[34m\]${context}${namespace:+:$namespace}\[\e[0m\]"
 }
 
 # prepend user@hostname to prompt, if connected via ssh
 __xelabash_add_ssh_to_prompt() {
   if [ -n "$SSH_CONNECTION" ]; then
-    PS1_PREFIX='\[\e]0;\u@\h \w\a\]'
-    PS1_INNER="\[\e[2m\]\u@\h\[\e[0m\] ${PS1_INNER}"
+    __xelabash_PS1_prefix='\[\e]0;\u@\h \w\a\]'
+    __xelabash_PS1_content="\[\e[2m\]\u@\h\[\e[0m\] ${__xelabash_PS1_content}"
   fi
 }
 
@@ -137,8 +141,8 @@ __xelabash_prompt() {
   __xelabash_add_exit_code_to_prompt
   __xelabash_add_ssh_to_prompt
   [ -n "$GIT_PROMPT" ] && [ -n "$__xelabash_git_bin" ] && __xelabash_add_git_to_prompt
-  [ -n "$KUBE_PROMPT" ] && [ -n "$__xelabash_kubectl_bin" ] && __xelabash_add_kube_to_prompt  # disabled by default
-  export PS1="${PS1_PREFIX:-}${PS1_INNER:-}${PS1_SUFFIX:-}"
+  [ -n "$KUBE_PROMPT" ] && [ -n "$__xelabash_kubectl_bin" ] && __xelabash_add_kube_to_prompt
+  export PS1="${__xelabash_PS1_prefix:-}${__xelabash_PS1_content:-}${__xelabash_PS1_suffix:-}"
   history -a
 }
 
