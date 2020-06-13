@@ -154,4 +154,6 @@ __xelabash_init() {
   fi
 }
 
-__xelabash_init
+if [ -z "${__xelabash_skip_init:-}" ]; then
+  __xelabash_init
+fi
