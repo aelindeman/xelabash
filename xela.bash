@@ -99,7 +99,7 @@ __xelabash_add_git_to_prompt() {
   local status_count
 
   if [ "$(git rev-parse --is-inside-work-tree 2>/dev/null)" = 'true' ] || [ "$(git rev-parse --is-inside-git-dir 2>/dev/null)" = 'true' ]; then
-    branch="$(git rev-parse --abbrev-ref HEAD)"
+    branch="$(git rev-parse --abbrev-ref HEAD 2>/dev/null)"
     [ -z "$branch" ] && branch='(no branch)'
     if [ "$(git rev-parse --is-inside-git-dir 2>/dev/null)" != 'true' ]; then
       status_count="$(git status --porcelain | wc -l)"
