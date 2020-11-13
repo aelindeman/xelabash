@@ -144,6 +144,17 @@ __xelabash_prompt() {
   [ -n "$KUBE_PROMPT" ] && [ -n "$__xelabash_kubectl_bin" ] && __xelabash_add_kube_to_prompt
   export PS1="${__xelabash_PS1_prefix:-}${__xelabash_PS1_content:-}${__xelabash_PS1_suffix:-}"
   history -a
+  __xelabash_cleanup
+}
+
+# clean up shared xelabash variables
+__xelabash_cleanup() {
+  unset __xelabash_git_bin \
+        __xelabash_kubectl_bin \
+        __xelabash_PS1_prefix \
+        __xelabash_PS1_content \
+        __xelabash_PS1_suffix \
+        __xelabash_PS1_last_exit
 }
 
 # do the thing!
