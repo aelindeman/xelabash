@@ -159,9 +159,11 @@ __xelabash_cleanup() {
 
 # do the thing!
 __xelabash_init() {
-  if [ -n "$PS1" ]; then
+  if [[ "$-" == *i* ]]; then
     __xelabash_configure
-    export PROMPT_COMMAND="__xelabash_prompt${PROMPT_COMMAND:+; $PROMPT_COMMAND}"
+    if [[ "$PROMPT_COMMAND" != *__xelabash_prompt* ]]; then
+      export PROMPT_COMMAND="__xelabash_prompt;$PROMPT_COMMAND"
+    fi
   fi
 }
 
