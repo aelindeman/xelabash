@@ -149,9 +149,7 @@ __xelabash_prompt() {
 
 # clean up shared xelabash variables
 __xelabash_cleanup() {
-  unset __xelabash_git_bin \
-        __xelabash_kubectl_bin \
-        __xelabash_PS1_prefix \
+  unset __xelabash_PS1_prefix \
         __xelabash_PS1_content \
         __xelabash_PS1_suffix \
         __xelabash_PS1_last_exit
