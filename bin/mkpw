@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # shellcheck disable=SC2016
-command='tr -dc "a-zA-Z0-9" < /dev/urandom | head -c "${1:-24}"'
+command='tr -dc "a-zA-Z0-9${include_symbols:+_!@#$%&*._-}" < /dev/urandom | head -c "${1:-24}"'
 
 if [ "$(uname -s)" = 'Darwin' ]; then
   command="LC_CTYPE=C $command"
