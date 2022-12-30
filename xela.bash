@@ -68,12 +68,6 @@ __xelabash_configure() {
   for config in "$(dirname "$(__xelabash_path)")"/config.d/*.bash; do
     source "$config"
   done
-
-  for config in "$HOME/.profile" "$HOME/.bash_aliases"; do
-    if [ -f "$config" ]; then
-      source "$config"
-    fi
-  done
 }
 
 # prepares the prompt variables
