@@ -1,7 +1,13 @@
 #!/bin/sh
 
-# shellcheck disable=SC2016
-command='tr -dc "a-zA-Z0-9${include_symbols:+_!@#$%&*._-}" < /dev/urandom | head -c "${1:-24}"'
+char_pool='a-zA-Z0-9'
+if [ -n "${symbols:-}" ]; then
+  char_pool="${char_pool}+_!@#$%&*._-"
+elif [ -n "${hex:-}" ]; then
+  char_pool='a-f0-9'
+fi
+
+command='tr -dc "'$char_pool'" < /dev/urandom | head -c "${1:-24}"'
 
 if [ "$(uname -s)" = 'Darwin' ]; then
   command="LC_ALL=C $command"
