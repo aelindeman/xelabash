@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+set -eu -o pipefail
+
+[[ -n "$(command -v upsc)" ]] || { echo 'upsc not found'; exit 1; }
+
+upsc() {
+  command upsc "$@" 2>/dev/null
+}
+
+watts() {
+  ups="$1"
+  load="$(upsc "$ups" 'ups.load')"
+  rating="$(upsc "$ups" 'ups.realpower.nominal')"
+  watts=$((load * rating / 100))
+  # uncertainty=$((rating / 100))
+  echo "${watts}"
+}
+
+if [ "$#" -eq 0 ]; then
+  for ups in $(upsc -l); do
+    watts=$(watts "$ups")
+    echo "$ups: ${watts}W"
+  done
+else
+  for ups in "$@"; do
+    watts "$ups"
+  done
+fi
